@@ -80,7 +80,7 @@ def test_spell_checker():
 
     spell = SpellChecker()
 
-    # 找到拼写错误
+    # Find spelling mistakes
     misspelled = spell.unknown(["speci-fied"])
 
     for word in misspelled:

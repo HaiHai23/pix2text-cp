@@ -78,7 +78,7 @@ class LayoutParser(object):
         resized_shape: int = 608,
         table_as_image: bool = False,
         **kwargs
-    ) -> (List[Dict[str, Any]], Dict[str, Any]):
+    ) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """
 
         Args:

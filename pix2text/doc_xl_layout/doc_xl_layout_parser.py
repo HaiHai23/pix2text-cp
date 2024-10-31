@@ -165,7 +165,7 @@ class DocXLayoutParser(LayoutParser):
         img: Union[str, Path, Image.Image],
         table_as_image: bool = False,
         **kwargs,
-    ) -> (List[Dict[str, Any]], Dict[str, Any]):
+    ) -> tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """
 
         Args:
