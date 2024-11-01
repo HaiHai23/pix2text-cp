@@ -175,6 +175,71 @@ class EasyOCREngine(TextOcrEngine):
         return outs
 
 
+class TesseractOCREngine(TextOcrEngine):
+    name = 'tesseract'
+
+    def detect_only(self, img: np.ndarray, **kwargs):
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        boxes = pytesseract.image_to_boxes(gray)
+
+        detected_texts = []
+        for box in boxes.splitlines():
+            x1, y1, x2, y2, _ = map(int, box.split())
+            detected_texts.append({'position': [[x1,y1], [x2,y1], [x2,y2], [x1,y2]]})
+
+        return {'detected_texts': detected_texts}
+
+    def recognize_only(self, img: np.ndarray, **kwargs):
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        text = pytesseract.image_to_string(gray, lang=self.languages[0])
+        return {'text': text, 'score': 1.0}  
+
+    def ocr(self, img: np.ndarray, rec_config: Optional[dict] = None, **kwargs):
+        results = []
+
+        for text_region in detected_texts['detected_texts']:
+            x1, y1, x2, y2 = text_region['position']
+            cropped_image = img[y1:y2, x1:x2]
+
+            text = pytesseract.image_to_string(cropped_image, config = rec_config)
+            results.append('text': text, 'score': 1.0, 'position': text_region['position'])
+
+        return results
+
+
+class VietOCREngine(TextOcrEngine):
+    name = 'vietocr'
+
+    def __init__(self, languages: Sequence[str], ocr_engine, config):
+        super().__init__(languages, ocr_engine)
+        self.config = config
+
+    def detect_only(self, img: ndarray, **kwargs):
+        gray = cv2.cvtColor(img, cv2,COLOR_BGR2GRAY)
+        thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+
+        boxes = pytesseract.image_to_boxes(thresh)
+
+        detected_regions = []
+        for box in boxes.splitlines():
+            x1, y1, x2, y2, _ = map(int, box.split())
+            detected_regions.append((x1, y1, x2, y2))
+
+        return detected_regions
+
+
+    def recognize_only(self, img: np.ndarray, **kwargs):
+        img = torch.from_numpy(img.transpose(2,0,1)).type(torch.FloatTensor).unsqueeze(0)
+
+        result = self.ocr_engine.recognize([img], **self.config)
+
+        text, prob = result[0]
+        avg_prob = sum(prob) / len(prob)
+
+        return {'text': text, 'score': avg_prob}
+
+
 def prepare_ocr_engine(languages: Sequence[str], ocr_engine_config):
     print('languages:', languages)
     ocr_engine_config = deepcopy(ocr_engine_config) if ocr_engine_config else {}
