@@ -98,12 +98,16 @@ class Pix2Text(object):
         layout_config = total_configs.get('layout', None)
         text_formula_config = total_configs.get('text_formula', None)
         table_config = total_configs.get('table', None)
+        # languages = total_configs.get('languages', ('en', 'ch_sim'))
+        print(f'text_formula_config: {text_formula_config}')
 
         # layout_parser = LayoutParser.from_config(layout_config, device=device)
         layout_parser = DocXLayoutParser.from_config(layout_config, device=device)
         text_formula_ocr = TextFormulaOCR.from_config(
             text_formula_config, enable_formula=enable_formula, device=device, **kwargs
         )
+        print(f'text_formula_ocr: {text_formula_ocr}')
+        print(f'languages: {text_formula_ocr.text_ocr.languages}')
         if enable_table:
             table_ocr = TableOCR.from_config(
                 text_formula_ocr.text_ocr,

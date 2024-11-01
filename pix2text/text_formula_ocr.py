@@ -92,6 +92,7 @@ class TextFormulaOCR(object):
             text_ocr = prepare_ocr_engine(
                 languages=('en', 'ch_sim'), ocr_engine_config=text_config
             )
+            print('default_text_ocr:', text_ocr)
         # if mfd is None or latex_ocr is None:
         #     default_ocr = TextFormulaOCR.from_config()
         #     mfd = default_ocr.mfd if mfd is None else mfd
@@ -129,6 +130,7 @@ class TextFormulaOCR(object):
         """
         total_configs = total_configs or DEFAULT_CONFIGS
         languages = total_configs.get('languages', ('en', 'ch_sim'))
+        print('configured_languages:', languages)
         text_config = total_configs.get('text', dict())
         mfd_config = total_configs.get('mfd', dict())
         formula_config = total_configs.get('formula', dict())
@@ -139,6 +141,7 @@ class TextFormulaOCR(object):
         )
 
         text_ocr = prepare_ocr_engine(languages, text_config)
+        print('configured_text_ocr:', text_ocr)
 
         if enable_formula:
             mfd = MathFormulaDetector(**mfd_config)

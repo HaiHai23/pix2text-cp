@@ -176,14 +176,16 @@ class EasyOCREngine(TextOcrEngine):
 
 
 def prepare_ocr_engine(languages: Sequence[str], ocr_engine_config):
+    print('languages:', languages)
     ocr_engine_config = deepcopy(ocr_engine_config) if ocr_engine_config else {}
-    if len(set(languages).difference({'en', 'ch_sim'})) == 0:
+    if len(set(languages).difference({'en', 'ch_sim'})) == set():
         from cnocr import CnOcr
 
         if 'ch_sim' not in languages and 'cand_alphabet' not in ocr_engine_config:  # only recognize english characters
             ocr_engine_config['cand_alphabet'] = string.printable
         ocr_engine = CnOcr(**ocr_engine_config)
         engine_wrapper = CnOCREngine(languages, ocr_engine)
+        print('CnOCREngine is used')
     else:
         try:
             from easyocr import Reader
@@ -195,4 +197,5 @@ def prepare_ocr_engine(languages: Sequence[str], ocr_engine_config):
             gpu = 'gpu' in context or 'cuda' in context
         ocr_engine = Reader(lang_list=list(languages), gpu=gpu, **ocr_engine_config)
         engine_wrapper = EasyOCREngine(languages, ocr_engine)
+        print('EasyOCREngine is used')
     return engine_wrapper
