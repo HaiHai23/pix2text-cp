@@ -175,6 +175,36 @@ class EasyOCREngine(TextOcrEngine):
         return outs
 
 
+class VietOCREngine(TextOcrEngine):
+    name = 'vietocr'
+
+    def __init__(self, languages: Sequence[str], ocr_engine):
+        super().__init__(languages, ocr_engine)
+        self.ocr_engine = ocr_engine
+
+
+    def recognize_only(self, img: np.ndarray, **kwargs):
+        if img.shape[-1] == 4: # RGBA image
+            img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+        elif img.shape[-1] == 1: # grayscale image
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+
+        text = self.ocr_engine.predict(img)
+
+        return {'text': text, 'score': 1.0}
+
+
+    def ocr(self, img: np.ndarray, rec_config: Optional[dict] = None, **kwargs):
+        recognition = self.recognize_only(img)
+
+        if recognition:
+            height, width = img.shape[:2]
+            position = np.array([[0,0], [width,0], [width,height], [0,height]])
+            return [{'text': recognition['text'], 'score': recognition['score'], 'position': position}]
+
+        return []
+
+
 def prepare_ocr_engine(languages: Sequence[str], ocr_engine_config):
     print('languages:', languages)
     ocr_engine_config = deepcopy(ocr_engine_config) if ocr_engine_config else {}
@@ -186,6 +216,15 @@ def prepare_ocr_engine(languages: Sequence[str], ocr_engine_config):
         ocr_engine = CnOcr(**ocr_engine_config)
         engine_wrapper = CnOCREngine(languages, ocr_engine)
         print('CnOCREngine is used')
+    elif 'vi' in languages:
+        from vietocr.tool.predictor import Predictor
+        from vietocr.tool.config import Cfg
+
+        config = Cfg.load_config_from_name('vgg_transformer')
+        config['device']    = 'cuda' if 'context' in ocr_engine_config and 'gpu' in ocr_engine_config['context'].lower() else 'cpu'
+        ocr_engine = Predictor(config)
+        engine_wrapper = VietOCREngine(languages, ocr_engine)
+        print('VietOCREngine is used')
     else:
         try:
             from easyocr import Reader
